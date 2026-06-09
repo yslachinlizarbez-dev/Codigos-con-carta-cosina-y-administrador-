@@ -1,0 +1,897 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Paradita MX - Menú Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@300;400;500;600;700&display=swap');
+        
+        :root { 
+            --mex-green: #006847; 
+            --mex-white: #f7f5f0; 
+            --mex-red: #ce1126; 
+            --mex-yellow: #ffb81c; 
+            --mex-dark: #1e1b18;
+        }
+        
+        body { 
+            background-color: var(--mex-white); 
+            font-family: 'Fredoka', sans-serif; 
+            color: var(--mex-dark); 
+            scroll-behavior: smooth; 
+        }
+        
+        .mexican-font { 
+            font-family: 'Luckiest Guy', cursive; 
+            letter-spacing: 2px; 
+        }
+        
+        .bg-mex-green { background-color: var(--mex-green); }
+        .bg-mex-red { background-color: var(--mex-red); }
+        .bg-mex-yellow { background-color: var(--mex-yellow); }
+        .text-mex-red { color: var(--mex-red); }
+        .text-mex-green { color: var(--mex-green); }
+        
+        .papel-picado { 
+            background-image: radial-gradient(circle at 10px 10px, transparent 10px, var(--mex-red) 11px); 
+            background-size: 20px 20px; 
+            height: 15px; 
+            width: 100%; 
+        }
+        
+        .promo-banner { 
+            background: linear-gradient(45deg, var(--mex-green), #008a5e); 
+            border: 4px dashed var(--mex-yellow); 
+        }
+        
+        .product-card { 
+            border: 2px solid #f1eeeb; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            background: white; 
+        }
+        
+        .product-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
+            border-color: var(--mex-yellow); 
+        }
+        
+        .flavor-chip, .custom-opt { 
+            border: 2px solid #e5e7eb; 
+            transition: all 0.2s ease-in-out; 
+        }
+        
+        .flavor-chip.selected, .custom-opt.selected { 
+            border-color: var(--mex-red); 
+            background-color: #fff1f2; 
+            color: var(--mex-red);
+            transform: scale(1.02); 
+        }
+        
+        #ai-chat-window { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: white; 
+            z-index: 200; 
+            flex-direction: column; 
+        }
+        
+        #ai-chat-window.active { 
+            display: flex; 
+        }
+        
+        .typing-indicator span { 
+            display: inline-block; 
+            width: 6px; 
+            height: 6px; 
+            background: #ccc; 
+            border-radius: 50%; 
+            margin-right: 3px; 
+            animation: bounce 1.4s infinite ease-in-out both; 
+        }
+        
+        @keyframes bounce { 
+            0%, 80%, 100% { transform: scale(0); } 
+            40% { transform: scale(1.0); } 
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes pulse-yellow { 
+            0% { box-shadow: 0 0 0 0 rgba(255, 184, 28, 0.4); } 
+            70% { box-shadow: 0 0 0 10px rgba(255, 184, 28, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(255, 184, 28, 0); } 
+        }
+        
+        .pulse { animation: pulse-yellow 2s infinite; }
+        
+        footer { 
+            background-color: #1e1b18; 
+            color: white; 
+            border-radius: 3rem 3rem 0 0; 
+        }
+        
+        .toast-notification { 
+            animation: slideInUp 0.3s ease-out forwards; 
+        }
+        
+        @keyframes slideInUp { 
+            from { transform: translateY(100px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+    </style>
+</head>
+<body class="pb-32">
+
+    <div class="flex h-2">
+        <div class="flex-1 bg-mex-green"></div>
+        <div class="flex-1 bg-white"></div>
+        <div class="flex-1 bg-mex-red"></div>
+    </div>
+
+    <header class="py-8 px-4 text-center bg-white relative">
+        <h1 class="mexican-font text-5xl md:text-7xl text-mex-red uppercase italic">La Paradita MX</h1>
+        <p class="text-mex-green font-bold text-sm tracking-widest mt-1">SABOR MEXICANO • MAZAMARI</p>
+    </header>
+
+    <div class="papel-picado"></div>
+
+    <div id="menu-container">
+        <!-- Input de Búsqueda -->
+        <div class="relative max-w-xl mx-auto px-4 mt-6">
+            <div class="relative">
+                <input type="text" id="menu-search" oninput="window.filterMenuBySearch()" placeholder="🔍 Busca por ingrediente, nombre o categoría..." class="w-full pl-12 pr-10 py-4 rounded-2xl bg-white border-2 border-gray-200 outline-none focus:border-mex-green text-sm text-black font-semibold transition-all shadow-sm">
+                <button onclick="window.clearSearch()" id="search-clear-btn" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-mex-red hidden"><i class="fas fa-times-circle"></i></button>
+            </div>
+        </div>
+
+        <!-- Barra de Categorías Auto-generada -->
+        <nav id="category-nav" class="sticky top-0 bg-white/95 backdrop-blur-md z-40 overflow-x-auto no-scrollbar py-4 px-4 shadow-md flex gap-2">
+        </nav>
+
+        <main class="max-w-xl mx-auto p-4 space-y-10 mt-4">
+            <!-- Banner Especial -->
+            <section id="promo" class="promo-banner rounded-3xl p-6 text-white relative overflow-hidden shadow-xl pulse text-left">
+                <div class="relative z-10">
+                    <span class="bg-mex-yellow text-mex-red px-3 py-1 rounded-full text-[10px] font-black uppercase">¡La Favorita! 🔥</span>
+                    <h2 class="mexican-font text-4xl mt-2 italic text-mex-yellow">ARMA TU MIXTO</h2>
+                    <p class="text-sm opacity-95 mb-6">4 órdenes de tacos. Elige 2 sabores distintos por solo S/ 16.00</p>
+                    <button onclick="window.openMixtoModal()" class="bg-white text-mex-red w-full py-4 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-all">
+                        ELIGE TUS SABORES
+                    </button>
+                </div>
+                <i class="fas fa-pepper-hot absolute -bottom-6 -right-6 text-9xl opacity-20 rotate-12"></i>
+            </section>
+            
+            <!-- Listado Principal de Menú -->
+            <div id="menu-content" class="space-y-12"></div>
+        </main>
+    </div>
+
+    <!-- MODAL DEL CARRITO DE COMPRAS -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/80 z-[130] hidden p-4 flex items-center justify-center text-black">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl relative">
+            <button onclick="window.toggleCartModal()" class="absolute top-4 right-4 text-white text-2xl z-10 font-bold">×</button>
+            <div class="bg-mex-red p-6 text-white text-center pb-8 rounded-b-3xl shadow-md z-0 relative">
+                <span class="text-3xl">🛒</span>
+                <h3 class="mexican-font text-2xl mt-1 leading-none">TU ORDEN</h3>
+            </div>
+            
+            <div id="cart-items-list" class="px-6 py-4 space-y-4 max-h-[40vh] overflow-y-auto no-scrollbar relative z-10 -mt-4 bg-white rounded-t-3xl pt-6">
+                <p class="text-center text-gray-400 py-6">Todavía no tienes tacos...</p>
+            </div>
+            
+            <div class="p-6 bg-white border-t flex flex-col gap-4">
+                <div class="flex justify-between items-center font-bold">
+                    <span class="text-sm font-black text-gray-800 uppercase">Total:</span>
+                    <span id="modal-total" class="text-2xl font-black text-mex-red">S/ 0.00</span>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="window.doClearCart()" class="bg-gray-100 text-gray-500 px-4 py-3 rounded-xl text-xs font-black uppercase hover:bg-gray-200 transition-colors" title="Vaciar Carrito"><i class="fas fa-trash"></i></button>
+                    <button onclick="window.sendOrder()" class="flex-1 bg-[#25D366] text-white py-3 rounded-xl text-xs font-black uppercase shadow-md flex items-center justify-center gap-2 active:scale-95 transition-transform font-bold">
+                        <i class="fab fa-whatsapp text-sm"></i> ENVIAR PEDIDO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE PERSONALIZACIÓN DINÁMICO DE PRODUCTOS (Ahora se adapta al Admin) -->
+    <div id="customization-modal" class="fixed inset-0 bg-black/80 z-[110] p-4 flex items-center justify-center hidden text-black">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl relative">
+            <button onclick="window.closeCustomizationModal()" class="absolute top-4 right-4 text-gray-200 text-2xl hover:text-white z-10 font-bold">×</button>
+            <div class="bg-mex-green p-6 text-white text-center rounded-b-3xl shadow-md z-0 relative">
+                <span class="text-3xl">🌮</span>
+                <h3 id="custom-title" class="mexican-font text-2xl italic mt-1 leading-none uppercase">PERSONALIZA TU ORDEN</h3>
+                <p class="text-[10px] text-mex-yellow font-black uppercase tracking-wider mt-1">Sabor mexicano de verdad</p>
+            </div>
+            
+            <div class="px-6 py-6 space-y-6 max-h-[50vh] overflow-y-auto no-scrollbar relative z-10 -mt-2 bg-white rounded-t-3xl text-left">
+                <!-- Picante -->
+                <div id="custom-picante-section" class="hidden">
+                    <p class="text-[10px] font-black uppercase text-mex-red mb-2.5">🔥 Nivel de Picante</p>
+                    <div class="grid grid-cols-3 gap-2 text-[10px]">
+                        <button onclick="window.setCustomOpt('picante', 'SinPicante')" id="opt-picante-SinPicante" class="custom-opt p-2.5 rounded-xl font-bold uppercase selected">🚫 Sin picante</button>
+                        <button onclick="window.setCustomOpt('picante', 'Bajo')" id="opt-picante-Bajo" class="custom-opt p-2.5 rounded-xl font-bold uppercase">🔥 Bajo</button>
+                        <button onclick="window.setCustomOpt('picante', 'Medio')" id="opt-picante-Medio" class="custom-opt p-2.5 rounded-xl font-bold uppercase">🔥🔥 Medio</button>
+                    </div>
+                </div>
+                
+                <!-- Adicionales dinámicos -->
+                <div id="custom-extras-section" class="hidden">
+                    <p class="text-[10px] font-black uppercase text-gray-400 mb-2.5">➕ ¿Algún extra adicional?</p>
+                    <div class="space-y-2">
+                        <button onclick="window.toggleCustomExtra('consome')" id="opt-extra-consome" class="custom-opt w-full p-3.5 rounded-xl font-bold text-xs flex justify-between items-center border-2 bg-white">
+                            <span>🥣 Consomé Extra</span><span class="text-mex-red font-black">+ S/ 3.00</span>
+                        </button>
+                        <button onclick="window.toggleCustomExtra('queso')" id="opt-extra-queso" class="custom-opt w-full p-3.5 rounded-xl font-bold text-xs flex justify-between items-center border-2 bg-white">
+                            <span>🧀 Queso Derretido Extra</span><span class="text-mex-red font-black">+ S/ 2.00</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex items-center justify-between gap-4">
+                <div class="text-left">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase leading-none">Subtotal Platos</p>
+                    <p id="custom-calculated-price" class="text-xl font-black text-mex-red mt-1">S/ 0.00</p>
+                </div>
+                <button onclick="window.confirmCustomizedProduct()" class="flex-1 bg-mex-green text-white py-4 rounded-2xl font-black text-xs uppercase shadow-md active:scale-95 transition-all">¡Añadir al Carro!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ELECCIÓN DE PLATOS PARA EL MIXTO -->
+    <div id="mixto-modal" class="fixed inset-0 bg-black/80 z-[100] hidden p-4 flex items-center justify-center text-black">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 relative shadow-2xl">
+            <button onclick="window.closeMixtoModal()" class="absolute top-4 right-4 text-gray-400 text-2xl font-bold">×</button>
+            <h3 class="mexican-font text-3xl text-mex-red italic text-center mb-1">¡ÁRMALO!</h3>
+            <p class="text-center text-xs text-gray-500 mb-6 uppercase font-bold tracking-widest">Selecciona 2 sabores (4 tacos)</p>
+            <div class="grid gap-3 mb-8" id="flavor-selection">
+                <button onclick="window.toggleFlavor('Birria')" class="flavor-chip p-4 rounded-2xl flex items-center justify-between bg-gray-50">
+                    <span class="font-bold text-slate-800">Tacos de Birria</span><i class="fas fa-check-circle text-mex-green opacity-0"></i>
+                </button>
+                <button onclick="window.toggleFlavor('Pastor')" class="flavor-chip p-4 rounded-2xl flex items-center justify-between bg-gray-50">
+                    <span class="font-bold text-slate-800">Tacos al Pastor</span><i class="fas fa-check-circle text-mex-green opacity-0"></i>
+                </button>
+                <button onclick="window.toggleFlavor('Asada')" class="flavor-chip p-4 rounded-2xl flex items-center justify-between bg-gray-50">
+                    <span class="font-bold text-slate-800">Tacos de Asada</span><i class="fas fa-check-circle text-mex-green opacity-0"></i>
+                </button>
+                <button onclick="window.toggleFlavor('Tinga')" class="flavor-chip p-4 rounded-2xl flex items-center justify-between bg-gray-50">
+                    <span class="font-bold text-slate-800">Tacos de Tinga</span><i class="fas fa-check-circle text-mex-green opacity-0"></i>
+                </button>
+            </div>
+            <button id="btn-confirm-mixto" disabled onclick="window.confirmMixto()" class="w-full bg-gray-200 text-gray-400 py-4 rounded-2xl font-black uppercase text-sm cursor-not-allowed transition-colors">Elige 2 sabores</button>
+        </div>
+    </div>
+
+    <!-- CHAT DEL CUATE AI -->
+    <div id="ai-chat-window" class="text-black">
+        <header class="p-6 border-b flex justify-between items-center bg-mex-green text-white">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-mex-yellow rounded-full flex items-center justify-center text-2xl shadow-inner">👨🏽‍🍳</div>
+                <div class="text-left"><h3 class="mexican-font text-xl italic tracking-widest">EL CUATE AI</h3><p class="text-[10px] font-bold uppercase opacity-80">Mesero Inteligente</p></div>
+            </div>
+            <button onclick="window.closeAIChat()" class="text-3xl font-bold">×</button>
+        </header>
+        <div id="ai-messages" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 no-scrollbar">
+            <div class="bg-white p-4 rounded-2xl rounded-tl-none border shadow-sm max-w-[85%] text-left">
+                <p class="text-sm text-gray-700 leading-relaxed text-black">¡Ándele carnal! ¿Qué se te antoja comer hoy? Cuéntame y yo te recomiendo lo mejor de la carta. 🌮</p>
+            </div>
+        </div>
+        <div class="p-6 border-t bg-white">
+            <div class="flex gap-2">
+                <input type="text" id="ai-input" placeholder="Pregúntame algo..." onkeypress="if(event.key==='Enter') window.sendMessageToAI()" class="flex-1 bg-gray-100 border rounded-2xl px-5 py-4 text-sm outline-none text-black focus:border-mex-green transition-all">
+                <button onclick="window.sendMessageToAI()" class="bg-mex-red text-white w-14 h-14 rounded-2xl flex items-center justify-center active:scale-90 transition shadow-lg"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Flotante para Abrir AI -->
+    <button onclick="window.openAIChat()" class="fixed bottom-28 right-6 bg-mex-yellow text-black w-16 h-16 rounded-full shadow-2xl flex items-center justify-center border-4 border-white z-40 pulse">
+        <span class="text-3xl">👨🏽‍🍳</span><div class="absolute -top-1 -right-1 bg-mex-red text-white text-[9px] px-2 py-1 rounded-full font-black animate-bounce">¡PIDE!</div>
+    </button>
+
+    <!-- Barra de Estado Fija de Carrito -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-mex-red p-4 z-50 shadow-2xl">
+        <div class="max-w-xl mx-auto flex items-center justify-between">
+            <div onclick="window.toggleCartModal()" class="cursor-pointer text-left">
+                <p class="text-[10px] text-gray-400 font-black uppercase">Total Pedido</p>
+                <p class="text-2xl font-black text-mex-red" id="cart-total-display">S/ 0.00</p>
+            </div>
+            <button onclick="window.toggleCartModal()" class="bg-mex-green text-white px-8 py-3 rounded-2xl font-black text-sm flex items-center gap-3 shadow-lg active:scale-95 transition">
+                VER ORDEN<span id="cart-count" class="bg-white text-mex-green w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold">0</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenedor global de Toasts/Notificaciones -->
+    <div id="toast-container" class="fixed top-4 left-4 right-4 z-[200] space-y-2 pointer-events-none flex flex-col items-center"></div>
+
+    <footer class="mt-20 py-12 px-6 text-center">
+        <div class="max-w-xl mx-auto space-y-8">
+            <div>
+                <h4 class="mexican-font text-2xl text-mex-yellow mb-4 italic uppercase">¡Síguenos en las redes!</h4>
+                <div class="flex justify-center gap-6 mt-4">
+                    <a href="https://wa.me/51931783811" target="_blank" rel="noopener noreferrer" class="w-14 h-14 bg-[#25D366] rounded-2xl flex items-center justify-center text-2xl shadow-lg active:scale-90 transition-all text-white"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.tiktok.com/@la.paradita.mx" target="_blank" rel="noopener noreferrer" class="w-14 h-14 bg-white text-black rounded-2xl flex items-center justify-center text-2xl shadow-lg active:scale-90 transition-all"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://www.facebook.com/share/17iBF5NFg3/" target="_blank" rel="noopener noreferrer" class="w-14 h-14 bg-[#1877F2] rounded-2xl flex items-center justify-center text-2xl shadow-lg active:scale-90 transition-all text-white"><i class="fab fa-facebook-f"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS CORE DE FIREBASE Y LOGICA DEL MENÚ CONECTOR -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'la-paradita-mx-admin';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyAuH6gyoD-TsTuJICReJ0HecKfYmPa2E7k",
+                authDomain: "la-paradita-mx.firebaseapp.com",
+                projectId: "la-paradita-mx",
+                storageBucket: "la-paradita-mx.firebasestorage.app",
+                messagingSenderId: "464811416726",
+                appId: "1:464811416726:web:7f41bc8450e2465843f6b7"
+              };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let dbProducts = [];
+
+        window.baseCategories = [
+            { id: 'tacos', label: 'Nuestros Tacos', color: 'border-mex-green text-mex-green' },
+            { id: 'quezas', label: 'Quezadillas', color: 'border-mex-red text-mex-red' },
+            { id: 'antojos', label: 'Antojitos', color: 'border-mex-yellow text-mex-yellow' },
+            { id: 'frutas', label: 'Frutas Enchiladas', color: 'border-orange-500 text-orange-500' },
+            { id: 'aguas', label: 'Aguas Frescas Naturales', color: 'border-blue-500 text-blue-500' },
+            { id: 'bebidas-frias', label: 'Bebidas Heladas', color: 'border-blue-600 text-blue-600' },
+            { id: 'bebidas-calientes', label: 'Bebidas Calientes', color: 'border-amber-700 text-amber-700' }
+        ];
+
+        const dynamicColors = ['border-teal-500 text-teal-500', 'border-purple-600 text-purple-600', 'border-pink-600 text-pink-600', 'border-indigo-600 text-indigo-600'];
+
+        // REGLA 3: Iniciar autenticación primero
+        const initAuth = async () => {
+            await signInAnonymously(auth);
+        };
+        initAuth();
+
+        // Escuchar autenticación para suscribirse en tiempo real
+        onAuthStateChanged(auth, (usr) => {
+            if (usr) {
+                // REGLA 1: Ruta exacta alineada con la app de administración
+                const productosCollectionPath = collection(db, 'artifacts', appId, 'public', 'data', 'productos');
+                
+                onSnapshot(productosCollectionPath, (snapshot) => {
+                    dbProducts = [];
+                    snapshot.forEach((doc) => { 
+                        dbProducts.push({ id: doc.id, ...doc.data() }); 
+                    });
+                    window.menuDataGlobal = dbProducts;
+                    window.renderMenu();
+                }, (err) => {
+                    console.error("Fallo de subscripción: ", err);
+                    window.showToast("⚠️ Fallo en conexión en tiempo real");
+                });
+            }
+        });
+
+        // RENDER DINÁMICO DE LA CARTA
+        window.renderMenu = function(filterArray = null) {
+            const menuContent = document.getElementById('menu-content');
+            const categoryNav = document.getElementById('category-nav');
+            if (!menuContent || !categoryNav) return;
+
+            const sourceArray = filterArray || dbProducts;
+            const categoriesMap = {};
+            
+            window.baseCategories.forEach(cat => { 
+                categoriesMap[cat.id] = { id: cat.id, label: cat.label, color: cat.color }; 
+            });
+
+            let colorIndex = 0;
+            sourceArray.forEach(prod => {
+                const cat = String(prod.categoria || "").toLowerCase().trim();
+                if (cat && !categoriesMap[cat]) {
+                    categoriesMap[cat] = { 
+                        id: cat, 
+                        label: prod.categoria_nombre || cat, 
+                        color: dynamicColors[colorIndex % dynamicColors.length] 
+                    };
+                    colorIndex++;
+                }
+            });
+
+            const activeCategoriesList = Object.values(categoriesMap);
+            categoryNav.innerHTML = "";
+            activeCategoriesList.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.id = `nav-sec-${cat.id}`;
+                btn.onclick = () => window.scrollToId(`sec-${cat.id}`);
+                btn.className = "nav-pill px-6 py-2 rounded-full bg-gray-100 text-gray-500 font-bold text-xs uppercase italic whitespace-nowrap transition-all";
+                btn.textContent = cat.label.replace('Nuestros ', '').replace(' Naturales', '');
+                categoryNav.appendChild(btn);
+            });
+
+            menuContent.innerHTML = "";
+            activeCategoriesList.forEach(cat => {
+                const section = document.createElement('section');
+                section.id = `sec-${cat.id}`; 
+                section.className = "menu-section text-left";
+                section.innerHTML = `
+                    <h3 class="mexican-font text-3xl ${cat.color} border-b-4 inline-block mb-4 italic uppercase">${cat.label}</h3>
+                    <div id="list-${cat.id}" class="space-y-6"></div>`;
+                menuContent.appendChild(section);
+            });
+
+            const grouped = {};
+            sourceArray.forEach(prod => {
+                const cat = String(prod.categoria || "tacos").toLowerCase().trim();
+                const subcat = String(prod.subcategoria || "").trim();
+                if (!grouped[cat]) grouped[cat] = {}; 
+                if (!grouped[cat][subcat]) grouped[cat][subcat] = [];
+                grouped[cat][subcat].push(prod);
+            });
+
+            for (const [cat, subcatMap] of Object.entries(grouped)) {
+                const listContainer = document.getElementById(`list-${cat}`);
+                if (!listContainer) continue;
+                
+                Object.keys(subcatMap).sort().forEach(subcat => {
+                    const productsList = subcatMap[subcat];
+                    const subcatWrapper = document.createElement('div'); 
+                    subcatWrapper.className = "space-y-4";
+                    
+                    if (subcat !== "") {
+                        subcatWrapper.innerHTML = `
+                            <div class="flex items-center gap-2 mt-4 mb-2">
+                                <div class="h-[3px] bg-mex-red flex-1 rounded-full opacity-30"></div>
+                                <h4 class="text-[11px] font-black uppercase tracking-widest text-mex-red/80 px-2">${subcat}</h4>
+                                <div class="h-[3px] bg-mex-red flex-1 rounded-full opacity-30"></div>
+                            </div>`;
+                    }
+                    
+                    const gridContainer = document.createElement('div'); 
+                    gridContainer.className = "grid gap-4";
+                    
+                    productsList.forEach(prod => {
+                        const agotado = !!prod.agotado;
+                        const div = document.createElement('div');
+                        div.className = `product-card p-4 rounded-3xl flex justify-between items-stretch shadow-sm gap-4 bg-white relative overflow-hidden transition-all duration-300 ${agotado ? 'opacity-60 grayscale-[40%]' : ''}`;
+                        
+                        let badge = agotado ? `<span class="absolute top-2 right-2 bg-gray-600 text-white text-[8px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider z-10 border border-white/20">❌ AGOTADO</span>` : "";
+                        let imageBlock = `<div class="w-24 h-24 rounded-2xl bg-gray-50 flex-shrink-0 relative overflow-hidden flex items-center justify-center border border-gray-100 shadow-inner">${prod.imagen ? `<img src="${prod.imagen}" class="absolute inset-0 w-full h-full object-cover">` : '<span class="text-3xl">🌮</span>'}</div>`;
+                        
+                        let actionButton = agotado 
+                            ? `<button disabled class="bg-gray-200 text-gray-400 w-12 h-12 rounded-2xl flex items-center justify-center cursor-not-allowed"><i class="fas fa-ban text-sm"></i></button>` 
+                            : `<button onclick="window.handleAddToCartClick('${prod.id}')" class="bg-mex-green hover:bg-emerald-700 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-md active:scale-90 transition-all"><i class="fas fa-plus"></i></button>`;
+                        
+                        div.innerHTML = `
+                            ${badge} 
+                            ${imageBlock}
+                            <div class="flex-1 flex flex-col justify-between pr-2 text-black text-left">
+                                <div>
+                                    <h4 class="font-bold text-base leading-tight uppercase ${agotado ? 'text-gray-500 line-through' : 'text-gray-900'}">${prod.Nombre}</h4>
+                                    <p class="text-[10px] text-gray-500 mt-1 leading-relaxed">${prod.descripcion || ""}</p>
+                                </div>
+                                <p class="text-mex-red font-black mt-2 text-lg italic font-bold">S/ ${parseFloat(prod.precio).toFixed(2)}</p>
+                            </div>
+                            <div class="flex items-center">${actionButton}</div>`;
+                        gridContainer.appendChild(div);
+                    });
+                    
+                    subcatWrapper.appendChild(gridContainer); 
+                    listContainer.appendChild(subcatWrapper);
+                });
+            }
+
+            activeCategoriesList.forEach(cat => {
+                const listContainer = document.getElementById(`list-${cat.id}`);
+                const sectionElement = document.getElementById(`sec-${cat.id}`);
+                const navPill = document.getElementById(`nav-sec-${cat.id}`);
+                if (listContainer && sectionElement) {
+                    const isEmpty = listContainer.innerHTML === "";
+                    sectionElement.classList.toggle('hidden', isEmpty);
+                    if (navPill) navPill.classList.toggle('hidden', isEmpty);
+                }
+            });
+        };
+
+        // --- SISTEMA DE CARRITO Y SELECCIONES ---
+        window.cart = []; 
+        window.selectedFlavors = [];
+        window.customizationState = { baseId: "", baseName: "", basePrice: 0, picante: "SinPicante", extras: { consome: false, queso: false } };
+
+        window.showToast = function(text) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "toast-notification bg-black/95 text-white font-bold text-xs uppercase px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 border border-white/20 pointer-events-auto";
+            toast.innerHTML = `<span>${text}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { 
+                toast.classList.add('opacity-0'); 
+                setTimeout(() => toast.remove(), 300); 
+            }, 2500);
+        };
+
+        window.filterMenuBySearch = function() {
+            const searchVal = document.getElementById('menu-search').value.toLowerCase().trim();
+            document.getElementById('search-clear-btn').classList.toggle('hidden', searchVal.length === 0);
+            if (searchVal.length > 0 && window.menuDataGlobal) {
+                const filtered = window.menuDataGlobal.filter(p => 
+                    String(p.Nombre || "").toLowerCase().includes(searchVal) || 
+                    String(p.descripcion || "").toLowerCase().includes(searchVal)
+                );
+                window.renderMenu(filtered);
+            } else { 
+                window.renderMenu(); 
+            }
+        };
+
+        window.clearSearch = function() { 
+            document.getElementById('menu-search').value = ""; 
+            document.getElementById('search-clear-btn').classList.add('hidden'); 
+            window.renderMenu(); 
+        };
+
+        window.scrollToId = function(id) { 
+            const el = document.getElementById(id); 
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 120, behavior: 'smooth' }); 
+        };
+
+        // NUEVO: El flujo de adición ahora es 100% dinámico basado en las banderas configuradas en el Admin
+        window.handleAddToCartClick = (productId) => {
+            const prod = dbProducts.find(p => p.id === productId);
+            if (!prod) return;
+
+            const hasPicante = !!prod.optPicante;
+            const hasConsome = !!prod.optConsome;
+            const hasQueso = !!prod.optQueso;
+
+            if (hasPicante || hasConsome || hasQueso) {
+                window.openCustomizationModal(prod, hasPicante, hasConsome, hasQueso);
+            } else {
+                window.addToCart(prod.Nombre, prod.precio);
+            }
+        };
+
+        window.openCustomizationModal = function(prod, hasPicante, hasConsome, hasQueso) {
+            window.customizationState = { 
+                baseId: prod.id,
+                baseName: prod.Nombre, 
+                basePrice: prod.precio, 
+                picante: "SinPicante", 
+                extras: { consome: false, queso: false } 
+            };
+            
+            document.getElementById('custom-title').innerText = `${prod.Nombre}`;
+            
+            const picanteSec = document.getElementById('custom-picante-section');
+            const extrasSec = document.getElementById('custom-extras-section');
+            const optConsome = document.getElementById('opt-extra-consome');
+            const optQueso = document.getElementById('opt-extra-queso');
+
+            if (hasPicante) {
+                picanteSec.classList.remove('hidden');
+                window.setCustomOpt('picante', 'SinPicante');
+            } else {
+                picanteSec.classList.add('hidden');
+                window.customizationState.picante = "SinPicante";
+            }
+
+            if (hasConsome || hasQueso) {
+                extrasSec.classList.remove('hidden');
+                
+                if (hasConsome) {
+                    optConsome.classList.remove('hidden');
+                    optConsome.classList.remove('selected');
+                    optConsome.querySelector('span:first-child').innerHTML = "🥣 Consomé Extra";
+                } else {
+                    optConsome.classList.add('hidden');
+                }
+
+                if (hasQueso) {
+                    optQueso.classList.remove('hidden');
+                    optQueso.classList.remove('selected');
+                    optQueso.querySelector('span:first-child').innerHTML = "🧀 Queso Derretido Extra";
+                } else {
+                    optQueso.classList.add('hidden');
+                }
+            } else {
+                extrasSec.classList.add('hidden');
+            }
+            
+            window.calculateCustomPrice(); 
+            document.getElementById('customization-modal').classList.remove('hidden');
+        };
+
+        window.closeCustomizationModal = () => document.getElementById('customization-modal').classList.add('hidden');
+        
+        window.setCustomOpt = function(optType, val) {
+            window.customizationState[optType] = val;
+            if (optType === 'picante') { 
+                ['SinPicante', 'Bajo', 'Medio'].forEach(p => { 
+                    const btn = document.getElementById(`opt-picante-${p}`); 
+                    if(btn) btn.classList.toggle('selected', p === val); 
+                }); 
+            }
+            window.calculateCustomPrice();
+        };
+
+        window.toggleCustomExtra = function(extraType) {
+            window.customizationState.extras[extraType] = !window.customizationState.extras[extraType];
+            const btn = document.getElementById(`opt-extra-${extraType}`); 
+            const isSel = window.customizationState.extras[extraType];
+            
+            btn.classList.toggle('selected', isSel);
+            
+            if (extraType === 'consome') {
+                btn.querySelector('span:first-child').innerHTML = `🥣 Consomé Extra ${isSel ? "<i class='fas fa-check-circle text-mex-green ml-1'></i>" : ""}`;
+            } else {
+                btn.querySelector('span:first-child').innerHTML = `🧀 Queso Derretido Extra ${isSel ? "<i class='fas fa-check-circle text-mex-green ml-1'></i>" : ""}`;
+            }
+            window.calculateCustomPrice();
+        };
+
+        window.calculateCustomPrice = function() {
+            let p = parseFloat(window.customizationState.basePrice);
+            if (window.customizationState.extras.consome) p += 3; 
+            if (window.customizationState.extras.queso) p += 2;
+            document.getElementById('custom-calculated-price').innerText = `S/ ${p.toFixed(2)}`;
+        };
+
+        window.confirmCustomizedProduct = function() {
+            let finalPrice = window.customizationState.basePrice; 
+            let specs = [];
+            const picLabels = { "SinPicante": "No Pica", "Bajo": "Pica Bajo", "Medio": "Pica Medio" };
+            
+            const prod = dbProducts.find(p => p.id === window.customizationState.baseId);
+            
+            if (prod && prod.optPicante) {
+                specs.push(picLabels[window.customizationState.picante]);
+            }
+            if (prod && prod.optConsome && window.customizationState.extras.consome) { 
+                specs.push("+Consomé"); 
+                finalPrice += 3; 
+            }
+            if (prod && prod.optQueso && window.customizationState.extras.queso) { 
+                specs.push("+Queso"); 
+                finalPrice += 2; 
+            }
+            
+            let cartItemName = window.customizationState.baseName;
+            if (specs.length > 0) {
+                cartItemName += ` (${specs.join(', ')})`;
+            }
+            
+            window.addToCart(cartItemName, finalPrice);
+            window.closeCustomizationModal();
+        };
+
+        window.addToCart = function(name, price) {
+            const item = window.cart.find(i => i.name === name);
+            if (item) item.qty++; 
+            else window.cart.push({ name, price, qty: 1 });
+            window.updateCartUI(); 
+            window.showToast(`🌮 Agregado a tu orden`);
+        };
+
+        window.updateCartUI = function() {
+            const totalQty = window.cart.reduce((a, b) => a + b.qty, 0); 
+            const subtotal = window.cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            
+            document.getElementById('cart-count').innerText = totalQty; 
+            document.getElementById('cart-total-display').innerText = `S/ ${subtotal.toFixed(2)}`;
+            document.getElementById('modal-total').innerText = `S/ ${subtotal.toFixed(2)}`;
+            
+            const list = document.getElementById('cart-items-list');
+            if (window.cart.length === 0) { 
+                list.innerHTML = '<p class="text-center text-gray-400 py-6">Todavía no tienes tacos...</p>'; 
+                return; 
+            }
+
+            list.innerHTML = window.cart.map((item, index) => `
+                <div class="flex justify-between items-center border-b pb-4">
+                    <div class="flex-1 pr-2 text-left text-black">
+                        <p class="font-bold text-sm uppercase leading-tight">${item.name}</p>
+                        <p class="text-[11px] text-mex-red font-black mt-1">S/ ${(item.price * item.qty).toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-gray-100 rounded-xl p-1 shadow-inner">
+                        <button onclick="window.changeQty(${index}, -1)" class="w-8 h-8 rounded-lg bg-white font-bold text-xl text-black border">-</button>
+                        <span class="font-bold text-sm w-4 text-center text-black">${item.qty}</span>
+                        <button onclick="window.changeQty(${index}, 1)" class="w-8 h-8 rounded-lg bg-white font-bold text-xl text-black border">+</button>
+                    </div>
+                </div>`).join('');
+        };
+
+        window.changeQty = function(index, delta) { 
+            window.cart[index].qty += delta; 
+            if (window.cart[index].qty <= 0) window.cart.splice(index, 1); 
+            window.updateCartUI(); 
+        };
+
+        window.toggleCartModal = () => document.getElementById('cart-modal').classList.toggle('hidden');
+        
+        window.doClearCart = () => { 
+            window.cart = []; 
+            window.updateCartUI(); 
+            window.toggleCartModal(); 
+            window.showToast("🗑️ Carrito vaciado"); 
+        };
+
+        window.sendOrder = function() {
+            if (window.cart.length === 0) return;
+            const subtotal = window.cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            let msg = "👑 *PEDIDO: LA PARADITA MX* 🌮%0A%0A";
+            window.cart.forEach(item => msg += `🔥 *${item.qty}x* ${item.name} -> S/ ${(item.price * item.qty).toFixed(2)}%0A`);
+            msg += `%0A💰 *TOTAL A PAGAR: S/ ${subtotal.toFixed(2)}*%0A%0A🤔 *¿Por favor, me indica en cuánto tiempo estará listo para retirar?*`;
+            window.open(`https://wa.me/51931783811?text=${msg}`, '_blank');
+        };
+
+        window.openMixtoModal = function() {
+            window.selectedFlavors = []; 
+            document.querySelectorAll('.flavor-chip').forEach(c => { 
+                c.classList.remove('selected'); 
+                c.querySelector('i').classList.add('opacity-0'); 
+            });
+            window.updateMixtoBtn(); 
+            document.getElementById('mixto-modal').classList.remove('hidden');
+        };
+
+        window.closeMixtoModal = () => document.getElementById('mixto-modal').classList.add('hidden');
+        
+        window.toggleFlavor = function(flavor) {
+            const index = window.selectedFlavors.indexOf(flavor); 
+            let clickedCard;
+            document.querySelectorAll('.flavor-chip').forEach(c => { 
+                if(c.innerText.includes(flavor)) clickedCard = c; 
+            });
+            
+            if (index > -1) { 
+                window.selectedFlavors.splice(index, 1); 
+                clickedCard.classList.remove('selected'); 
+                clickedCard.querySelector('i').classList.add('opacity-0'); 
+            } else if (window.selectedFlavors.length < 2) { 
+                window.selectedFlavors.push(flavor); 
+                clickedCard.classList.add('selected'); 
+                clickedCard.querySelector('i').classList.remove('opacity-0'); 
+            }
+            window.updateMixtoBtn();
+        };
+
+        window.updateMixtoBtn = function() {
+            const btn = document.getElementById('btn-confirm-mixto'); 
+            const ok = window.selectedFlavors.length === 2;
+            btn.disabled = !ok; 
+            btn.innerText = ok ? "¡AÑADIR MIXTO!" : `Elige ${window.selectedFlavors.length}/2 sabores`;
+            btn.className = ok ? "w-full bg-mex-yellow text-black py-4 rounded-2xl font-black uppercase text-sm active:scale-95 transition-transform" : "w-full bg-gray-200 text-gray-400 py-4 rounded-2xl font-black uppercase text-sm cursor-not-allowed";
+        };
+
+        window.confirmMixto = () => { 
+            window.addToCart(`MIXTO (${window.selectedFlavors.join(' y ')})`, 16); 
+            window.closeMixtoModal(); 
+        };
+
+        // --- INTEGRADOR INTEGRAL DE "EL CUATE AI" CON GEMINI 2.5 FLASH PREVIEW ---
+        window.openAIChat = () => document.getElementById('ai-chat-window').classList.add('active');
+        window.closeAIChat = () => document.getElementById('ai-chat-window').classList.remove('active');
+        
+        window.sendMessageToAI = async function() {
+            const input = document.getElementById('ai-input'); 
+            const message = input.value.trim(); 
+            if (!message) return;
+            
+            const container = document.getElementById('ai-messages');
+            container.innerHTML += `<div class="bg-mex-red/10 p-4 rounded-2xl rounded-tr-none border border-mex-red/20 ml-auto max-w-[85%] text-right text-sm text-gray-800 font-bold">${message}</div>`;
+            input.value = '';
+            
+            const loading = document.createElement('div'); 
+            loading.className = "bg-white p-4 rounded-2xl rounded-tl-none border shadow-sm w-20 text-left";
+            loading.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+            container.appendChild(loading); 
+            container.scrollTop = container.scrollHeight;
+            
+            try {
+                const response = await window.callCuateAI(message); 
+                loading.remove();
+                container.innerHTML += `<div class="bg-white p-4 rounded-2xl rounded-tl-none border shadow-sm max-w-[85%] text-sm text-gray-700 text-left">${response}</div>`;
+                container.scrollTop = container.scrollHeight;
+            } catch (e) { 
+                loading.remove(); 
+                container.innerHTML += `<div class="bg-white p-4 rounded-2xl border text-xs text-red-500 text-left">Error de conexión carnal.</div>`; 
+            }
+        };
+
+        // Conector de Reintentos Exponenciales y Modelo de Vista Previa
+        async function fetchWithRetry(url, options, retries = 5, delay = 1000) {
+            try {
+                const res = await fetch(url, options);
+                if (!res.ok) {
+                    if (retries > 0) {
+                        await new Promise(r => setTimeout(r, delay));
+                        return fetchWithRetry(url, options, retries - 1, delay * 2);
+                    }
+                    throw new Error(`HTTP Error: ${res.status}`);
+                }
+                return res;
+            } catch (err) {
+                if (retries > 0) {
+                    await new Promise(r => setTimeout(r, delay));
+                    return fetchWithRetry(url, options, retries - 1, delay * 2);
+                }
+                throw err;
+            }
+        }
+
+        window.callCuateAI = async function(query) {
+            const apiKey = ""; // La plataforma inyectará la clave a esta constante vacía al vuelo
+            
+            // Recolectar la disponibilidad de la carta en tiempo real para instruir a la IA
+            const activeMenuContext = window.menuDataGlobal && window.menuDataGlobal.length > 0
+                ? window.menuDataGlobal.map(p => `- ${p.Nombre}: ${p.descripcion || ''} (S/ ${parseFloat(p.precio).toFixed(2)}) [${p.agotado ? 'AGOTADO' : 'Disponible'}]`).join('\n')
+                : "Cargando menú en tiempo real...";
+
+            const systemPrompt = `Eres "El Cuate AI", el mesero digital inteligente y súper divertido de "La Paradita MX", ubicado en Mazamari, Junín, Perú.
+Tu personalidad es alegre, hablas como un auténtico y carismático mexicano ("¡ándele!", "carnal", "chavo", "mero mero", "órale", "híjole"). Eres súper servicial y te apasiona la comida.
+
+Esta es la carta actual del restaurante que debes usar para guiar e incentivar pedidos:
+${activeMenuContext}
+
+Reglas cruciales:
+1. Recomienda activamente platos disponibles basándote en lo que el cliente te pregunte o sugiera.
+2. Si un plato figura como "[AGOTADO]", amablemente avisa que por hoy se nos acabó el ingrediente y sugiérele otra deliciosa alternativa disponible en stock.
+3. Responde de forma concisa, amigable, no satures con textos gigantescos. Da precios exactos según la lista.
+4. Si el cliente quiere ordenar, recuérdale que puede cerrar el chat y presionar el botón verde "+" de la carta para agregarlo directo al carrito.`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: query }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            try {
+                const response = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "¡Híjole! Me distraje un momento cocinando. ¿Qué me decías, carnal?";
+            } catch(error) {
+                return "Se me cruzaron los cables con el picante, carnal. 🌶️ Prueba de nuevo en unos segundos.";
+            }
+        };
+
+        // Scroll Spy para cambiar la categoría activa al deslizar el menú
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('.menu-section'); 
+            let currentSec = "";
+            sections.forEach(sec => { 
+                if (window.pageYOffset >= (sec.offsetTop - 150)) currentSec = sec.id.replace('sec-', ''); 
+            });
+            if (currentSec) {
+                document.querySelectorAll('.nav-pill').forEach(pill => {
+                    pill.className = "nav-pill px-6 py-2 rounded-full bg-gray-100 text-gray-500 font-bold text-xs uppercase italic whitespace-nowrap transition-all";
+                });
+                const activePill = document.getElementById(`nav-sec-${currentSec}`);
+                if (activePill) {
+                    activePill.className = "nav-pill px-6 py-2 rounded-full bg-mex-green text-white font-bold text-xs uppercase italic whitespace-nowrap transition-all shadow-md scale-105";
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
+
