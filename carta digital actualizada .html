@@ -1,0 +1,738 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Paradita MX - Carta Digital Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --mex-green: #006847;
+            --mex-white: #fdfdfd;
+            --mex-red: #ce1126;
+            --mex-yellow: #ffb81c;
+            --mex-cream: #f7f5f0; 
+            --mex-dark: #1e1b18;
+        }
+
+        body {
+            background-color: var(--mex-cream);
+            font-family: 'Fredoka', sans-serif;
+            color: var(--mex-dark);
+            scroll-behavior: smooth;
+        }
+
+        .mexican-font {
+            font-family: 'Luckiest Guy', cursive;
+            letter-spacing: 1.5px;
+        }
+
+        .bg-mex-green { background-color: var(--mex-green); }
+        .bg-mex-red { background-color: var(--mex-red); }
+        .bg-mex-yellow { background-color: var(--mex-yellow); }
+        .text-mex-red { color: var(--mex-red); }
+        .text-mex-green { color: var(--mex-green); }
+
+        /* Ocultar barra de scroll en carruseles */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Tarjeta horizontal con efecto de elevación sutil */
+        .premium-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .premium-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -8px rgba(0,0,0,0.06);
+        }
+
+        /* Notificación Toast Animada */
+        .toast-notification {
+            animation: slideInUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes slideInUp {
+            from { transform: translateY(80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="pb-36">
+
+    <!-- CINTA DE COLORES DE LA BANDERA -->
+    <div class="flex h-3 shadow-xs"><div class="flex-1 bg-mex-green"></div><div class="flex-1 bg-white"></div><div class="flex-1 bg-mex-red"></div></div>
+
+    <!-- CABECERA PRINCIPAL STICKY -->
+    <header class="bg-white border-b border-stone-200/60 py-4 px-6 text-center sticky top-0 z-50 shadow-xs">
+        <span class="text-3xl">🌮</span>
+        <h1 class="mexican-font text-2xl text-mex-green mt-0.5">LA PARADITA MX</h1>
+        <p class="text-[9px] uppercase font-black tracking-widest text-mex-red">Menú Digital Auténtico • Mazamari</p>
+    </header>
+
+    <!-- MENÚ DE CATEGORÍAS FLOTANTE STICKY (Se mantiene en pantalla mientras el comensal baja) -->
+    <div class="sticky top-[73px] bg-white/95 backdrop-blur-md z-40 border-b border-stone-200/40 shadow-sm py-2.5">
+        <div class="max-w-xl mx-auto px-4">
+            <nav id="category-nav" class="flex gap-2 overflow-x-auto no-scrollbar py-1 px-0.5"></nav>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR DE LA CARTA -->
+    <main class="max-w-xl mx-auto p-4 space-y-6">
+
+        <!-- 1. BANNER PROMOCIONAL "ARMA TU MIXTO" (Abre el configurador dinámico) -->
+        <div onclick="window.openMixtoModal()" class="bg-mex-green text-white p-5 rounded-[2.2rem] border-4 border-dashed border-mex-yellow shadow-md relative overflow-hidden cursor-pointer transition-transform active:scale-98">
+            <div class="absolute -right-6 -bottom-6 text-7xl opacity-15">🌮</div>
+            <span class="bg-mex-yellow text-slate-950 font-black text-[9px] uppercase px-3 py-1 rounded-full shadow-sm">¡La Recomendación de la Casa! 🔥</span>
+            <h3 class="mexican-font text-2xl uppercase mt-2.5 tracking-tight leading-none text-mex-yellow">ARMA TU MIXTO</h3>
+            <p class="text-xs text-stone-100 mt-1.5 font-medium max-w-[85%]">Pídete 4 deliciosos tacos de la carta combinando hasta 2 sabores distintos por solo S/ 16.00. ¡Están buenísimos!</p>
+            <div class="mt-4 flex items-center justify-between bg-white text-mex-green font-bold text-xs py-2.5 px-5 rounded-2xl w-fit shadow-xs gap-3">
+                <span class="uppercase tracking-wide">Armar mi Mixto</span>
+                <span class="bg-mex-red text-white px-2 py-0.5 rounded text-[9px] font-black animate-pulse">EMPEZAR</span>
+            </div>
+        </div>
+
+        <!-- 2. BUSCADOR -->
+        <div class="relative">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-xs"></i>
+            <input type="text" id="menu-search" oninput="window.filterClientMenu()" placeholder="🔍 ¿Qué se te antoja hoy, carnal?..." class="w-full bg-white border-2 border-stone-200/60 rounded-2xl py-3.5 pl-11 pr-4 text-xs font-semibold shadow-xs outline-none focus:border-mex-green text-stone-800 placeholder-stone-400">
+        </div>
+
+        <!-- 3. CONTENIDO DINÁMICO DE PLATILLOS -->
+        <div id="menu-content" class="space-y-10">
+            <div class="py-20 text-center text-stone-400 font-bold uppercase text-xs">
+                <i class="fas fa-spinner animate-spin text-mex-green text-3xl mb-3 block"></i>
+                Cargando nuestra deliciosa carta...
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL PREMIUM: CONFIGURADOR DE COMBO MIXTO (Fiel a la petición de tacos dinámicos) -->
+    <div id="mixto-modal" class="fixed inset-0 bg-black/80 z-[160] hidden p-4 flex items-center justify-center text-slate-850">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl max-h-[85vh]">
+            <div class="bg-mex-green p-5 text-white text-center rounded-b-2xl shadow-sm">
+                <h3 class="mexican-font text-lg text-mex-yellow tracking-wide uppercase">Configurador de Mixto</h3>
+                <p class="text-[9px] uppercase font-bold tracking-wider text-stone-200 mt-1">Lleva 4 tacos en total combinando 2 sabores</p>
+            </div>
+            
+            <div class="p-6 space-y-4 text-left overflow-y-auto no-scrollbar flex-1">
+                <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Elige tus 2 especialidades de Taco</p>
+                
+                <div class="space-y-3">
+                    <!-- Sabor 1 -->
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-500 mb-1">Primer Sabor (Lleva 2 unidades)</label>
+                        <select id="mixto-sabor-1" class="w-full px-4 py-3 border-2 rounded-2xl text-xs font-bold bg-white text-black outline-none focus:border-mex-green">
+                            <option value="">Selecciona un sabor...</option>
+                        </select>
+                    </div>
+
+                    <!-- Sabor 2 -->
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-500 mb-1">Segundo Sabor (Lleva 2 unidades)</label>
+                        <select id="mixto-sabor-2" class="w-full px-4 py-3 border-2 rounded-2xl text-xs font-bold bg-white text-black outline-none focus:border-mex-green">
+                            <option value="">Selecciona un sabor...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Extras del Mixto -->
+                <div class="border-t pt-3.5 space-y-2.5">
+                    <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest">¿Deseas añadir extras al combo?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-center justify-between bg-stone-50 p-3 rounded-2xl border cursor-pointer hover:bg-stone-100">
+                            <span class="text-xs font-bold text-slate-700 flex items-center gap-2">🧀 Queso Extra (En los 4 tacos)</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black text-mex-red">+ S/ 2.00</span>
+                                <input type="checkbox" id="mixto-opt-queso" onchange="window.calculateMixtoPriceLive()" class="w-4 h-4 accent-mex-green">
+                            </div>
+                        </label>
+                        <label class="flex items-center justify-between bg-stone-50 p-3 rounded-2xl border cursor-pointer hover:bg-stone-100">
+                            <span class="text-xs font-bold text-slate-700 flex items-center gap-2">🥣 Consomé Especial</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black text-mex-red">+ S/ 3.00</span>
+                                <input type="checkbox" id="mixto-opt-consome" onchange="window.calculateMixtoPriceLive()" class="w-4 h-4 accent-mex-green">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="border-t pt-3 flex justify-between items-center">
+                    <span class="text-xs font-bold text-stone-500">Precio Final del Combo:</span>
+                    <span id="mixto-price-live" class="text-lg font-black text-mex-red">S/ 16.00</span>
+                </div>
+            </div>
+
+            <div class="p-5 bg-stone-50 border-t flex gap-2">
+                <button type="button" onclick="window.closeMixtoModal()" class="bg-white border text-stone-700 px-4 py-3 rounded-2xl font-bold text-[10px] uppercase flex-1">Cancelar</button>
+                <button type="button" onclick="window.addMixtoToCart()" class="bg-mex-green text-white hover:bg-emerald-800 px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex-[1.5] tracking-widest shadow-sm">🛒 Añadir Combo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAT FLOATING BUTTON "EL CUATE AI" -->
+    <div class="fixed bottom-24 right-4 z-50 flex flex-col items-end gap-2">
+        <div id="ai-hint-bubble" class="bg-slate-900 text-white font-bold text-[9px] uppercase px-4 py-2 rounded-2xl shadow-xl border border-white/10 animate-bounce">
+            🌮 ¡Hola, carnal! Chatea conmigo para ordenar
+        </div>
+        <button onclick="window.toggleChatDrawer()" class="bg-mex-yellow text-slate-950 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl border-4 border-white text-xl relative transition-transform active:scale-95">
+            🧑‍🍳
+            <span class="absolute -top-1 -right-1 bg-mex-red text-white w-4.5 h-4.5 rounded-full text-[8px] font-black flex items-center justify-center border-2 border-white animate-pulse">1</span>
+        </button>
+    </div>
+
+    <!-- FOOTER DE COMPRA RÁPIDA -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-100 p-4 z-40 shadow-xl">
+        <div class="max-w-xl mx-auto flex items-center justify-between gap-4">
+            <div class="text-left">
+                <p class="text-[10px] text-stone-400 font-black uppercase tracking-wide">Total Mi Orden</p>
+                <p class="text-xl font-black text-mex-red" id="cart-total-display">S/ 0.00</p>
+            </div>
+            <button onclick="window.toggleCartModal()" class="bg-mex-green hover:bg-emerald-800 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center gap-2.5 shadow-md transition-colors">
+                REVISAR MI ORDEN <span id="cart-count" class="bg-white text-mex-green w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black">0</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DEL PEDIDO -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/75 z-[130] hidden p-4 flex items-center justify-center text-slate-800">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl max-h-[80vh]">
+            <div class="bg-mex-green p-5 text-white text-center rounded-b-2xl shadow-sm">
+                <h3 class="mexican-font text-lg text-mex-yellow tracking-wide uppercase">Mi Orden Digital</h3>
+            </div>
+            
+            <div class="p-6 space-y-4 text-left overflow-y-auto no-scrollbar flex-1">
+                <div>
+                    <label class="block text-[9px] font-black uppercase text-stone-400 mb-1.5">¿En qué mesa te encuentras?</label>
+                    <select id="client-table-select" required class="w-full px-4 py-3 border-2 rounded-2xl text-xs font-bold bg-white text-black outline-none focus:border-mex-green">
+                        <option value="">Seleccionar mesa...</option>
+                    </select>
+                </div>
+                <div id="cart-items-list" class="space-y-2 border-y py-3 min-h-[80px]"></div>
+                <div class="flex justify-between font-black text-xs text-stone-700 pt-2">
+                    <span>Total de la mesa:</span>
+                    <span id="modal-total" class="text-lg text-mex-red">S/ 0.00</span>
+                </div>
+            </div>
+
+            <div class="p-5 bg-stone-50 border-t flex gap-2">
+                <button onclick="window.toggleCartModal()" class="bg-white border text-stone-700 px-4 py-3 rounded-2xl font-bold text-[10px] uppercase flex-1">Seguir Viendo</button>
+                <button onclick="window.sendClientOrder()" class="bg-mex-red text-white hover:bg-red-700 px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex-[1.5] tracking-widest shadow-sm">🛎️ Enviar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAT DEL CUATE AI DRAWER -->
+    <div id="chat-drawer" class="fixed inset-y-0 right-0 w-full sm:max-w-sm bg-slate-950 z-[150] shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
+        <div class="p-5 border-b border-slate-800 bg-slate-900 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🧑‍🍳</span>
+                <div class="text-left">
+                    <h3 class="mexican-font text-base text-mex-yellow leading-none uppercase">EL CUATE AI</h3>
+                    <p class="text-[8px] uppercase font-black text-slate-400 tracking-wider">Tu mesero mexicano digital</p>
+                </div>
+            </div>
+            <button onclick="window.toggleChatDrawer()" class="text-slate-400 hover:text-white text-xl font-bold">×</button>
+        </div>
+
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
+            <div class="flex items-start gap-2.5">
+                <span class="bg-mex-yellow/10 text-mex-yellow w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0">🧑‍🍳</span>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-xs text-left max-w-[80%] text-slate-200 leading-relaxed">
+                    ¡Qué onda, carnal! Bienvenido a **La Paradita MX** aquí en Mazamari. Yo soy el **Cuate AI**, tu mesero personal de confianza. 
+                    <br><br>
+                    ¿Qué se te antoja ordenar hoy? Puedo sugerirte platillos, decirte si algo está agotado, o incluso **agregar las cosas directamente a tu carrito si me lo pides**. ¡Pruébalo! 🌮🎉
+                </div>
+            </div>
+        </div>
+
+        <form onsubmit="window.handleChatSubmit(event)" class="p-3 border-t border-slate-800 bg-slate-900 flex gap-2">
+            <input type="text" id="chat-input" placeholder="Pregúntame o pide (Ej. Ponme 2 tacos de pastor)..." class="flex-1 bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl text-xs outline-none text-white focus:border-mex-yellow">
+            <button type="submit" id="chat-send-btn" class="bg-mex-yellow text-slate-950 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fas fa-paper-plane text-xs"></i></button>
+        </form>
+    </div>
+
+    <!-- NOTIFICACIONES TOAST -->
+    <div id="toast-container" class="fixed top-4 left-4 right-4 z-[250] space-y-2 pointer-events-none flex flex-col items-center"></div>
+
+    <!-- MOTOR LÓGICO DE INTEGRACIÓN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = 'la-paradita-mx-admin';
+        const firebaseConfig = {
+            apiKey: "AIzaSyAuH6gyoD-TsTuJICReJ0HecKfYmPa2E7k",
+            authDomain: "la-paradita-mx.firebaseapp.com",
+            projectId: "la-paradita-mx",
+            storageBucket: "la-paradita-mx.firebasestorage.app",
+            messagingSenderId: "464811416726",
+            appId: "1:464811416726:web:7f41bc8450e2465843f6b7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const productosCollectionPath = collection(db, 'artifacts', appId, 'public', 'data', 'productos');
+        const ventasCollectionPath = collection(db, 'artifacts', appId, 'public', 'data', 'ventas');
+        const mesasCollectionPath = collection(db, 'artifacts', appId, 'public', 'data', 'mesas');
+
+        let dbProducts = [];
+        let dbMesas = [];
+        window.cart = [];
+        window.chatMemory = []; 
+
+        window.baseCategories = [ 
+            { id: 'tacos', label: 'Nuestros Tacos' }, 
+            { id: 'quezas', label: 'Quezadillas' }, 
+            { id: 'antojos', label: 'Antojitos' }, 
+            { id: 'aguas', label: 'Aguas Frescas Naturales' }, 
+            { id: 'bebidas-frias', label: 'Bebidas Heladas' } 
+        ];
+
+        window.getCategoryColorScheme = function(catId) {
+            const colors = {
+                'tacos': { inactive: 'bg-emerald-50 text-emerald-700 border-emerald-200', active: 'bg-emerald-600 text-white border-transparent' },
+                'quezas': { inactive: 'bg-red-50 text-red-700 border-red-200', active: 'bg-mex-red text-white border-transparent' },
+                'antojos': { inactive: 'bg-amber-50 text-amber-700 border-amber-200', active: 'bg-amber-500 text-white border-transparent' }
+            };
+            return colors[catId] || { inactive: 'bg-stone-100 text-stone-700 border-stone-200', active: 'bg-stone-700 text-white border-transparent' };
+        };
+
+        const initAuth = async () => {
+            try {
+                await signInAnonymously(auth);
+                window.startClientSubscriptions();
+            } catch (err) { console.error(err); }
+        };
+        initAuth();
+
+        window.startClientSubscriptions = function() {
+            onSnapshot(productosCollectionPath, (snapshot) => {
+                dbProducts = [];
+                snapshot.forEach((doc) => { dbProducts.push({ id: doc.id, ...doc.data() }); });
+                window.renderClientMenu();
+                window.updateMixtoModalSelectors(); // Actualiza dinámicamente los tacos disponibles para armar mixtos
+            });
+
+            onSnapshot(mesasCollectionPath, (snapshot) => {
+                dbMesas = [];
+                snapshot.forEach((doc) => { dbMesas.push({ id: doc.id, ...doc.data() }); });
+                window.updateTableSelector();
+            });
+        };
+
+        // --- MANEJO DINÁMICO DEL COMBO "ARMA TU MIXTO" (CONECTADO AL ADMIN) ---
+        window.openMixtoModal = function() {
+            window.updateMixtoModalSelectors();
+            document.getElementById('mixto-modal').classList.remove('hidden');
+            document.getElementById('mixto-opt-queso').checked = false;
+            document.getElementById('mixto-opt-consome').checked = false;
+            window.calculateMixtoPriceLive();
+        };
+
+        window.closeMixtoModal = function() {
+            document.getElementById('mixto-modal').classList.add('hidden');
+        };
+
+        // Rellena los selectores de tacos del configurador usando la base de datos viva
+        window.updateMixtoModalSelectors = function() {
+            const sabor1 = document.getElementById('mixto-sabor-1');
+            const sabor2 = document.getElementById('mixto-sabor-2');
+            if (!sabor1 || !sabor2) return;
+
+            // Extrae dinámicamente los tacos registrados que no estén agotados
+            const availableTacos = dbProducts.filter(p => p.categoria === 'tacos' && !p.agotado);
+
+            const optionsHTML = `
+                <option value="">Selecciona un sabor...</option>
+                ${availableTacos.map(t => `<option value="${t.Nombre}">${t.Nombre} (S/ ${parseFloat(t.precio).toFixed(2)})</option>`).join('')}
+            `;
+
+            const currentVal1 = sabor1.value;
+            const currentVal2 = sabor2.value;
+
+            sabor1.innerHTML = optionsHTML;
+            sabor2.innerHTML = optionsHTML;
+
+            sabor1.value = currentVal1;
+            sabor2.value = currentVal2;
+        };
+
+        window.calculateMixtoPriceLive = function() {
+            let basePrice = 16.00;
+            if (document.getElementById('mixto-opt-queso').checked) basePrice += 2.00;
+            if (document.getElementById('mixto-opt-consome').checked) basePrice += 3.00;
+
+            document.getElementById('mixto-price-live').innerText = `S/ ${basePrice.toFixed(2)}`;
+            return basePrice;
+        };
+
+        window.addMixtoToCart = function() {
+            const sabor1 = document.getElementById('mixto-sabor-1').value;
+            const sabor2 = document.getElementById('mixto-sabor-2').value;
+
+            if (!sabor1 || !sabor2) {
+                window.showToast("⚠️ Debes seleccionar los 2 sabores del combo");
+                return;
+            }
+
+            const quesoChecked = document.getElementById('mixto-opt-queso').checked;
+            const consomeChecked = document.getElementById('mixto-opt-consome').checked;
+            const finalPrice = window.calculateMixtoPriceLive();
+
+            let comboName = `Combo Mixto (2x ${sabor1} + 2x ${sabor2})`;
+            let extras = [];
+            if (quesoChecked) extras.push("Queso Extra");
+            if (consomeChecked) extras.push("Consomé");
+            
+            if (extras.length > 0) {
+                comboName += ` [Con ${extras.join(' + ')}]`;
+            }
+
+            window.cart.push({
+                id: 'mixto-' + Date.now(),
+                name: comboName,
+                price: finalPrice,
+                qty: 1
+            });
+
+            window.updateCartUI();
+            window.closeMixtoModal();
+            window.showToast("🌮 ¡Combo Mixto agregado al carrito!");
+        };
+
+        // --- RENDER CON DISEÑO DE FOTOS GRANDES HORIZONTALES (CONECTADO AL ADMIN) ---
+        window.renderClientMenu = function(filterArray = null) {
+            const menuContent = document.getElementById('menu-content'); 
+            const categoryNav = document.getElementById('category-nav');
+            if (!menuContent || !categoryNav) return;
+
+            const sourceArray = filterArray || dbProducts; 
+            const categoriesMap = {};
+            window.baseCategories.forEach(cat => { categoriesMap[cat.id] = { id: cat.id, label: cat.label }; });
+            sourceArray.forEach(prod => { 
+                const cat = String(prod.categoria || "").toLowerCase().trim(); 
+                if (cat && !categoriesMap[cat]) { 
+                    categoriesMap[cat] = { id: cat, label: prod.categoria_nombre || cat }; 
+                } 
+            });
+
+            categoryNav.innerHTML = "";
+            Object.values(categoriesMap).forEach(cat => {
+                const btn = document.createElement('button'); 
+                btn.onclick = () => window.scrollToId(`sec-${cat.id}`);
+                const colors = window.getCategoryColorScheme(cat.id);
+                btn.className = `px-4 py-2 rounded-2xl font-bold text-xs uppercase border flex-shrink-0 transition-all ${colors.inactive}`; 
+                btn.textContent = cat.label; 
+                btn.id = `btn-cat-${cat.id}`;
+                categoryNav.appendChild(btn);
+            });
+
+            menuContent.innerHTML = "";
+            Object.values(categoriesMap).forEach(cat => {
+                const section = document.createElement('section'); 
+                section.id = `sec-${cat.id}`; 
+                section.className = "text-left space-y-4";
+                section.innerHTML = `
+                    <h3 class="mexican-font text-2xl text-stone-800 italic uppercase pl-1 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-mex-green rounded-full"></span>
+                        ${cat.label}
+                    </h3>
+                    <div id="list-${cat.id}" class="grid grid-cols-1 gap-4"></div>`; 
+                menuContent.appendChild(section);
+            });
+
+            sourceArray.forEach(prod => {
+                const cat = String(prod.categoria || "tacos").toLowerCase().trim(); 
+                const listContainer = document.getElementById(`list-${cat}`);
+                if (!listContainer) return;
+
+                const div = document.createElement('div');
+                const isAgotado = !!prod.agotado;
+                
+                let actionHTML = isAgotado ? `
+                    <span class="bg-red-50 text-mex-red font-extrabold text-[9px] uppercase px-3 py-1.5 rounded-full border border-red-150">Agotado</span>
+                ` : `
+                    <button onclick="window.addToCart('${prod.id}')" class="bg-mex-green hover:bg-emerald-800 active:scale-95 text-white font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all flex items-center gap-1 shadow-xs">
+                        Añadir +
+                    </button>
+                `;
+
+                // Renderizado de foto del plato al lado izquierdo (Grande, visible y nítida)
+                const imageHTML = prod.imagen ? `
+                    <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden flex-shrink-0 border border-stone-200/50 shadow-xs">
+                        <img src="${prod.imagen}" class="w-full h-full object-cover" alt="${prod.Nombre}">
+                        ${isAgotado ? '<div class="absolute inset-0 bg-slate-900/60 flex items-center justify-center text-[10px] text-white font-bold uppercase">Agotado</div>' : ''}
+                    </div>
+                ` : `
+                    <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white flex items-center justify-center text-3xl flex-shrink-0 border-2 border-stone-200/50 border-dashed">
+                        🌮
+                        ${isAgotado ? '<div class="absolute inset-0 bg-slate-900/60 flex items-center justify-center text-[10px] text-white font-bold uppercase">Agotado</div>' : ''}
+                    </div>
+                `;
+
+                div.className = `premium-card bg-white p-3.5 rounded-3xl border border-stone-200/60 flex gap-4 items-center shadow-xs ${isAgotado ? 'opacity-70' : ''}`;
+                div.innerHTML = `
+                    ${imageHTML}
+                    <div class="flex-1 flex flex-col justify-between h-24 sm:h-28 min-w-0 py-0.5 text-left">
+                        <div class="space-y-1">
+                            <h4 class="font-extrabold text-sm sm:text-base text-stone-850 uppercase tracking-tight truncate">${prod.Nombre}</h4>
+                            <p class="text-[11px] text-stone-400 line-clamp-2 leading-tight">${prod.descripcion || "¡Preparado al momento con ingredientes frescos e importados!"}</p>
+                        </div>
+                        <div class="flex justify-between items-end mt-auto">
+                            <span class="text-mex-red font-black text-sm sm:text-base">S/ ${parseFloat(prod.precio).toFixed(2)}</span>
+                            ${actionHTML}
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(div);
+            });
+        };
+
+        window.scrollToId = function(id) { 
+            const el = document.getElementById(id); 
+            if (el) {
+                const offset = 145; // Offset ampliado para compensar los dos headers sticky perfectamente
+                const bodyRect = document.body.getBoundingClientRect().top;
+                const elementRect = el.getBoundingClientRect().top;
+                const offsetPosition = (elementRect - bodyRect) - offset;
+                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+
+                // Activar pill
+                const catId = id.replace('sec-', '');
+                document.querySelectorAll('[id^="btn-cat-"]').forEach(btn => {
+                    const cid = btn.id.replace('btn-cat-', '');
+                    const colors = window.getCategoryColorScheme(cid);
+                    btn.className = `px-4 py-2 rounded-2xl font-bold text-xs uppercase border flex-shrink-0 transition-all ${colors.inactive}`;
+                });
+                
+                const activeBtn = document.getElementById(`btn-cat-${catId}`);
+                if (activeBtn) {
+                    const colors = window.getCategoryColorScheme(catId);
+                    activeBtn.className = `px-4 py-2 rounded-2xl font-bold text-xs uppercase border flex-shrink-0 transition-all ${colors.active}`;
+                }
+            }
+        };
+
+        window.filterClientMenu = function() {
+            const query = document.getElementById('menu-search').value.toLowerCase().trim();
+            window.renderClientMenu(query ? dbProducts.filter(p => p.Nombre.toLowerCase().includes(query) || (p.descripcion || '').toLowerCase().includes(query)) : null);
+        };
+
+        window.updateTableSelector = function() {
+            const select = document.getElementById('client-table-select');
+            if (select) {
+                const currentVal = select.value;
+                select.innerHTML = `<option value="">Seleccionar mesa...</option>` + dbMesas.map(m => `<option value="${m.id}">${m.nombre.toUpperCase()}</option>`).join('');
+                select.value = currentVal;
+            }
+        };
+
+        // --- MANEJO DEL CARRITO ---
+        window.addToCart = function(id) {
+            const prod = dbProducts.find(p => p.id === id);
+            if (prod) {
+                const existing = window.cart.find(item => item.id === prod.id);
+                if (existing) existing.qty++;
+                else window.cart.push({ id: prod.id, name: prod.Nombre, price: prod.precio, qty: 1 });
+                window.updateCartUI();
+                window.showToast(`¡Añadido: ${prod.Nombre}!`);
+            }
+        };
+
+        window.updateCartUI = function() {
+            const total = window.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const count = window.cart.reduce((sum, item) => sum + item.qty, 0);
+
+            document.getElementById('cart-count').innerText = count;
+            document.getElementById('cart-total-display').innerText = `S/ ${total.toFixed(2)}`;
+            document.getElementById('modal-total').innerText = `S/ ${total.toFixed(2)}`;
+
+            const list = document.getElementById('cart-items-list');
+            if (window.cart.length === 0) {
+                list.innerHTML = `<p class="text-center text-stone-400 text-xs py-8 italic">Tu carrito de compras está vacío</p>`;
+                return;
+            }
+
+            list.innerHTML = window.cart.map(item => `
+                <div class="flex justify-between items-center text-xs font-semibold text-stone-700 py-2 border-b border-stone-100 last:border-0">
+                    <div class="text-left">
+                        <p class="uppercase text-stone-800 font-extrabold leading-tight">${item.name}</p>
+                        <span class="text-[10px] text-mex-red">S/ ${parseFloat(item.price).toFixed(2)} c/u</span>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <button onclick="window.changeQty('${item.id}', -1)" class="w-6 h-6 bg-stone-100 text-stone-600 rounded flex items-center justify-center font-bold border">-</button>
+                        <span class="text-xs font-black text-stone-900">${item.qty}</span>
+                        <button onclick="window.changeQty('${item.id}', 1)" class="w-6 h-6 bg-stone-100 text-stone-600 rounded flex items-center justify-center font-bold border">+</button>
+                    </div>
+                </div>`).join('');
+        };
+
+        window.changeQty = function(id, delta) {
+            const item = window.cart.find(i => i.id === id);
+            if (item) {
+                item.qty += delta;
+                if (item.qty <= 0) window.cart = window.cart.filter(i => i.id !== id);
+                window.updateCartUI();
+            }
+        };
+
+        window.toggleCartModal = () => document.getElementById('cart-modal').classList.toggle('hidden');
+        window.toggleChatDrawer = () => {
+            const drawer = document.getElementById('chat-drawer');
+            drawer.classList.toggle('translate-x-full');
+            document.getElementById('ai-hint-bubble').classList.add('hidden');
+        };
+
+        window.sendClientOrder = async function() {
+            if (window.cart.length === 0) return;
+            const selectedTableId = document.getElementById('client-table-select').value;
+            if (!selectedTableId) {
+                window.showToast("⚠️ Selecciona tu mesa para enviar el pedido");
+                return;
+            }
+
+            const total = window.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const tableObj = dbMesas.find(m => m.id === selectedTableId);
+            const mesaLabel = tableObj ? tableObj.nombre.toUpperCase() : "MESA";
+
+            try {
+                await addDoc(ventasCollectionPath, {
+                    monto: total,
+                    descripcion: `Mesa: ${mesaLabel} (AutoPedido) - ${window.cart.map(i => i.name).join(', ')}`,
+                    date: new Date().toISOString(),
+                    paymentMethod: "Pendiente",
+                    orderTypeStr: `Mesa: ${mesaLabel}`,
+                    customerName: "AUTOPEDIDO CELULAR",
+                    tableId: selectedTableId,
+                    cart: [...window.cart],
+                    estado_cocina: 'pendiente',
+                    pagado: false
+                });
+
+                await updateDoc(doc(mesasCollectionPath, selectedTableId), { estado: 'ocupada', cuenta_activa: [...window.cart] });
+                window.cart = [];
+                window.updateCartUI();
+                window.toggleCartModal();
+                window.showToast("🚀 ¡Pedido enviado con éxito a Cocina!");
+            } catch (err) { window.showToast("Error de conexión"); }
+        };
+
+        // --- SISTEMA DEL CUATE AI ---
+        window.handleChatSubmit = async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const btn = document.getElementById('chat-send-btn');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = "";
+            btn.disabled = true;
+            window.appendChatMessage("user", text);
+
+            const activeMenuStr = dbProducts.map(p => 
+                `- ${p.Nombre} | Precio: S/ ${p.precio} | Categoría: ${p.categoria} | Estado: ${p.agotado ? 'AGOTADO' : 'Disponible'}`
+            ).join('\n');
+
+            const systemPrompt = `
+                Eres "El Cuate AI", el carismático mesero virtual de "La Paradita MX" en Mazamari. Hablas con alegre jerga mexicana y cariño peruano.
+                
+                NUESTRO MENÚ REAL:
+                ${activeMenuStr}
+
+                INSTRUCCIONES DE ACCIÓN:
+                - Si te piden un plato agotado, sugiéreles otro disponible de inmediato.
+                - Si te piden agregar algo a su orden, inyecta esta etiqueta estricta al final para que el sistema interactúe directamente con su carrito físico de compras:
+                [ADD_TO_CART: {"name": "Nombre Exacto del Producto", "qty": cantidad}]
+            `;
+
+            window.chatMemory.push({ role: "user", parts: [{ text: text }] });
+            const apiKey = ""; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            let aiResponseText = "";
+            let success = false;
+            let delay = 1000;
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: window.chatMemory, systemInstruction: { parts: [{ text: systemPrompt }] } })
+                    });
+                    if (response.ok) {
+                        const result = await response.json();
+                        aiResponseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        success = true;
+                        break;
+                    }
+                } catch (e) {}
+                await new Promise(r => setTimeout(r, delay));
+                delay *= 2;
+            }
+
+            btn.disabled = false;
+            if (!success) {
+                window.appendChatMessage("assistant", "¡Híjole carnal! Mis servidores andan un poco ocupados, pero usa mi menú interactivo de abajo para armar tu orden al tiro.");
+                return;
+            }
+            window.processAICarritoActions(aiResponseText);
+        };
+
+        window.processAICarritoActions = function(fullText) {
+            let cleanResponse = fullText;
+            const regex = /\[ADD_TO_CART:\s*(\{.*?\})\]/g;
+            let match;
+
+            while ((match = regex.exec(fullText)) !== null) {
+                try {
+                    const jsonData = JSON.parse(match[1]);
+                    const productName = jsonData.name;
+                    const qty = parseInt(jsonData.qty) || 1;
+
+                    const prodObj = dbProducts.find(p => p.Nombre.toLowerCase().trim() === productName.toLowerCase().trim());
+                    if (prodObj && !prodObj.agotado) {
+                        const existing = window.cart.find(item => item.id === prodObj.id);
+                        if (existing) existing.qty += qty;
+                        else window.cart.push({ id: prodObj.id, name: prodObj.Nombre, price: prodObj.precio, qty: qty });
+                        window.updateCartUI();
+                        window.showToast(`🤠 El Cuate AI agregó ${qty}x ${prodObj.Nombre}`);
+                    } else if (prodObj && prodObj.agotado) {
+                        window.showToast(`⚠️ ¡El plato ${productName} está agotado hoy!`);
+                    }
+                } catch (e) {}
+            }
+
+            cleanResponse = cleanResponse.replace(/\[ADD_TO_CART:\s*\{.*?\}\]/g, '').trim();
+            window.chatMemory.push({ role: "model", parts: [{ text: fullText }] });
+            window.appendChatMessage("assistant", cleanResponse);
+        };
+
+        window.appendChatMessage = function(sender, text) {
+            const container = document.getElementById('chat-messages');
+            if(!container) return;
+            const div = document.createElement('div');
+            div.className = "flex items-start gap-2.5";
+            div.innerHTML = sender === 'user' ? `<div class="flex-1"></div><div class="bg-mex-green/20 text-emerald-100 p-4 rounded-3xl text-xs text-left max-w-[80%] leading-relaxed border border-mex-green/30">${text}</div>` : `<span class="bg-mex-yellow/10 text-mex-yellow w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0">🧑‍🍳</span><div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-xs text-left max-w-[80%] text-slate-200 leading-relaxed">${text.replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>')}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        };
+
+        window.showToast = function(text) {
+            const container = document.getElementById('toast-container'); 
+            if(!container) return;
+            const toast = document.createElement('div');
+            toast.className = "toast-notification bg-slate-900 text-white font-bold text-[11px] uppercase px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-white/15 pointer-events-auto";
+            toast.innerHTML = `⚡ <span>${text}</span>`; 
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        };
+    </script>
+</body>
+</html>
